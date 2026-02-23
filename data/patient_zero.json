@@ -1,0 +1,20 @@
+{
+    "patient_id": "PT-88421",
+    "age": 68,
+    "gender": "M",
+    "chief_complaint": "Acute abdominal pain, tachycardia, rapidly progressing ascending flaccid paralysis over 48 hours.",
+    "history_of_present_illness": "Patient presents to ER with excruciating abdominal pain unresponsive to standard analgesia. Developed distal muscle weakness yesterday which has rapidly ascended.",
+    "vitals": {
+        "BP": "165/95",
+        "HR": 118,
+        "Temp": "37.2C",
+        "SpO2": "94% on room air"
+    },
+    "labs": {
+        "Na": "118 mEq/L (Severe Hyponatremia)",
+        "AST_ALT": "Mildly elevated",
+        "Urine": "Darkens upon standing",
+        "CSF_Protein": "Normal",
+        "Heavy_Metals": "Negative"
+    }
+}
