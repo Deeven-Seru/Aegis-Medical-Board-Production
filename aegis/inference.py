@@ -1,9 +1,21 @@
 import os
 import sys
 import torch
+from pydantic import BaseModel
+from typing import List
 from .logger import get_logger
 
 logger = get_logger("MedGemmaEngine")
+
+class AgentJSONResponse(BaseModel):
+    assessment: str
+    confidence: float
+
+class CMOJSONResponse(BaseModel):
+    primary_diagnosis: str
+    differential_diagnoses: List[str]
+    recommended_actions: List[str]
+    consensus_confidence: float
 
 class MedGemmaEngine:
     _instance = None
@@ -27,6 +39,7 @@ class MedGemmaEngine:
         
         try:
             from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+            import outlines
             
             # Edge AI Feasibility: 4-bit quantization allows the 4B model to run on consumer GPUs (<8GB VRAM)
             quantization_config = None
@@ -51,26 +64,25 @@ class MedGemmaEngine:
                     device_map="auto",
                     token=self.token
                 )
+            
+            # Initialize Outlines generator wrappers for guaranteed structured output
+            self.outlines_model = outlines.models.Transformers(self.model, self.tokenizer)
+            self.agent_generator = outlines.generate.json(self.outlines_model, AgentJSONResponse)
+            self.cmo_generator = outlines.generate.json(self.outlines_model, CMOJSONResponse)
                 
-            logger.success("MedGemma weights successfully loaded into memory.")
+            logger.success("MedGemma weights successfully loaded. Outlines structured generation initialized.")
         except ImportError as e:
-            logger.critical(f"Missing required ML dependencies: {e}. Run: pip install transformers torch accelerate bitsandbytes")
+            logger.critical(f"Missing required ML dependencies: {e}. Run: pip install transformers torch accelerate bitsandbytes outlines")
             sys.exit(1)
         except Exception as e:
             logger.critical(f"Failed to load model weights: {e}. Ensure you have enough VRAM and a valid token.")
             sys.exit(1)
 
-    def generate(self, prompt: str, max_new_tokens: int = 250, temperature: float = 0.2) -> str:
-        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
-        
-        with torch.no_grad():
-            outputs = self.model.generate(
-                **inputs, 
-                max_new_tokens=max_new_tokens, 
-                temperature=temperature,
-                do_sample=True,
-                pad_token_id=self.tokenizer.eos_token_id
-            )
-            
-        generated_text = self.tokenizer.decode(outputs[0][inputs['input_ids'].shape[-1]:], skip_special_tokens=True)
-        return generated_text.strip()
+    def generate_agent_response(self, prompt: str) -> dict:
+        # Outlines forces the LLM logits to ONLY generate valid JSON matching the Pydantic schema
+        result = self.agent_generator(prompt)
+        return result.model_dump()
+
+    def generate_cmo_response(self, prompt: str) -> dict:
+        result = self.cmo_generator(prompt)
+        return result.model_dump()

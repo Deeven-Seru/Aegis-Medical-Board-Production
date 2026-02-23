@@ -26,7 +26,7 @@ By utilizing MedGemma as a fleet of intelligent agents, Aegis completely overhau
 
 ### Empirical Benchmarks
 
-World-class medical tools require rigorous empirical validation. We benchmarked Aegis against a synthetic dataset of 50 highly complex clinical problem-solving cases (inspired by NEJM case records) where the primary diagnosis requires synthesizing multi-organ symptoms. 
+World-class medical tools require rigorous empirical validation. We benchmarked Aegis against a subset of 50 multi-systemic clinical vignettes from the MedQA (USMLE) dataset where the primary diagnosis requires synthesizing multi-organ symptoms. 
 
 
 

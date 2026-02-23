@@ -1,6 +1,4 @@
 import asyncio
-import json
-import re
 from typing import List, Dict
 from .models import PatientCase, MDTConsensus, AgentResponse
 from .agent import MedicalAgent
@@ -26,31 +24,16 @@ class ChiefMedicalOfficer:
         Labs: {labs_str}
         """
 
-    def _extract_json(self, text: str) -> dict:
-        try:
-            match = re.search(r'\{.*\}', text.replace('\n', ' '), re.IGNORECASE)
-            if match:
-                return json.loads(match.group(0))
-            return json.loads(text)
-        except Exception as e:
-            logger.error(f"Failed to parse final MDT Consensus JSON: {e}")
-            return {
-                "primary_diagnosis": "Parsing Error. Refer to raw agent logs.",
-                "differential_diagnoses": ["Error"],
-                "recommended_actions": ["Review manual logs"],
-                "consensus_confidence": 0.0
-            }
-
     async def _generate_final_consensus(self, case_id: str, history: List[Dict[str, str]]) -> dict:
         prompt = "System: You are the Chief Medical Officer summarizing a Multidisciplinary Team (MDT) debate.\n\n"
         prompt += "MDT Debate History:\n"
         for entry in history:
             prompt += f"[{entry['role']}]: {entry['content']}\n"
-        prompt += "\nOutput your final consensus ONLY as a valid JSON object. Do not include markdown formatting like ```json. The JSON must have the following keys: 'primary_diagnosis' (string), 'differential_diagnoses' (list of strings), 'recommended_actions' (list of strings), and 'consensus_confidence' (float 0.0 to 1.0).\nJSON:"
+        prompt += "\nProvide the final primary diagnosis, differential diagnoses, recommended actions, and confidence score."
         
         loop = asyncio.get_event_loop()
-        consensus_text = await loop.run_in_executor(None, self.engine.generate, prompt, 300, 0.1)
-        return self._extract_json(consensus_text)
+        final_data = await loop.run_in_executor(None, self.engine.generate_cmo_response, prompt)
+        return final_data
 
     async def run_board(self, case: PatientCase, rounds: int = 1) -> MDTConsensus:
         logger.info(f"Initializing Autonomous MDT Session for Case ID: {case.case_id}")
@@ -65,7 +48,7 @@ class ChiefMedicalOfficer:
                 history.append({"role": agent.agent_id, "content": response.assessment})
                 agent_responses.append(response)
 
-        logger.info(f"MDT Session Concluded. Compiling final LLM structured consensus.")
+        logger.info(f"MDT Session Concluded. Compiling structured LLM consensus.")
         
         final_data = await self._generate_final_consensus(case.case_id, history)
         
