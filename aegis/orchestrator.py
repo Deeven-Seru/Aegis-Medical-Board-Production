@@ -60,3 +60,8 @@ class ChiefMedicalOfficer:
             agent_logs=agent_responses,
             consensus_confidence=float(final_data.get("consensus_confidence", 0.0))
         )
+
+    async def shutdown(self):
+        logger.info("Shutting down Aegis Orchestrator and releasing resources.")
+        # In a more complex deployment, close HTTPX pools or DB connections here
+        pass

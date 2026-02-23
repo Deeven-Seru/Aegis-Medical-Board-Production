@@ -20,27 +20,9 @@ The financial and clinical impact of Aegis is staggering. A standard MDT costs a
 ### Overall solution
 Aegis reimagines the complex workflow of the medical board by deploying an asynchronous, multi-agent swarm natively powered by the HAI-DEF **MedGemma-1.5-4b-it** model.
 
-Instead of treating the LLM as a single oracle chatbot, Aegis spins up multiple logical instances of MedGemma, each strictly prompted with a unique medical specialty persona (Diagnostician, Intensivist, Toxicologist). When fed a complex FHIR-aligned patient case file, the agents do not just output an answer—they enter an iterative debate loop. They analyze the clinical data, propose competing hypotheses, ruthlessly critique their colleagues' reasoning, and systematically converge on a final, LLM-synthesized consensus.
+Instead of treating the LLM as a single oracle chatbot, Aegis spins up multiple logical instances of MedGemma, each strictly prompted with a unique medical specialty persona (Diagnostician, Intensivist, Toxicologist). When fed a structured patient case file, the agents do not just output an answer—they enter an iterative debate loop. They analyze the clinical data, propose competing hypotheses, ruthlessly critique their colleagues' reasoning, and systematically converge on a final, LLM-synthesized consensus.
 
 By utilizing MedGemma as a fleet of intelligent agents, Aegis completely overhauls the diagnostic workflow, serving as the ultimate realization of the **Agentic Workflow Prize** criteria.
-
-### Empirical Benchmarks
-
-World-class medical tools require rigorous empirical validation. We benchmarked Aegis against a subset of 50 multi-systemic clinical vignettes from the MedQA (USMLE) dataset where the primary diagnosis requires synthesizing multi-organ symptoms. 
-
-
-
-| Architecture | Accuracy (Top-1) | False Positive Rate | Average Confidence Calibration |
-
-| :--- | :---: | :---: | :---: |
-
-| **Baseline** (MedGemma-1.5-4b-it Single-Shot) | 42.0% | 38.5% | 0.88 (Overconfident) |
-
-| **Aegis Swarm** (3 Agents, 2 Iteration Rounds) | **78.5%** | **12.0%** | **0.81** (Highly Calibrated) |
-
-
-
-By forcing the model to critique its own blind spots via specialized personas, the swarm successfully caught diagnoses that the single-shot model missed, reducing premature closure errors by over 60%.
 
 
 ### Technical details & Product Feasibility
@@ -49,8 +31,11 @@ Aegis is an enterprise-grade, lightweight orchestration router designed for Edge
 **1. Native Local Inference (Edge AI):**
 To ensure complete HIPAA compliance and zero cloud reliance, Aegis integrates the `transformers` library to run MedGemma locally. We utilized `bitsandbytes` 4-bit quantization (`load_in_4bit=True`), successfully deploying the 4-billion parameter model onto consumer-grade GPUs (<8GB VRAM). This proves the solution's extreme feasibility for under-resourced clinics globally. 
 
-**2. Asynchronous Debate Loop:**
-The `ChiefMedicalOfficer` class acts as the orchestrator. It feeds the initial patient context to the agents and manages state. We utilize `asyncio` to prevent the FastAPI event loop from blocking during heavy ML tensor generation. As each agent processes the case, the router appends their diagnostic assessment to the shared context window, forcing subsequent agents to factor in or debunk previous theories. Finally, the CMO agent runs a separate synthesis pass to aggregate the debate into actionable medical directives.
+**2. Asynchronous Adversarial Debate Loop:**
+The `ChiefMedicalOfficer` class acts as the orchestrator. It feeds the initial patient context to the agents and manages state. We utilize `asyncio` to prevent the FastAPI event loop from blocking during heavy ML tensor generation. Crucially, agents are prompted not just to diagnose, but to actively critique prior assessments in the context window. As each agent processes the case, the router appends their diagnostic assessment to the shared context, forcing subsequent agents to factor in or debunk previous theories. Finally, the CMO agent runs a separate structured synthesis pass to aggregate the debate into actionable medical directives.
 
-**3. Enterprise Observability & FHIR-Alignment:**
-Aegis uses strict Pydantic models to validate incoming patient data, preventing malformed EHR data from corrupting the inference pipeline. Furthermore, we integrated native Prometheus metrics (`mdt_requests_total`, `mdt_request_latency_seconds`) and Loguru structured logging, providing the exact observability metrics hospital IT departments require for deployment.
+**3. Guaranteed Structured Generation (Outlines):**
+Aegis uses strict Pydantic models to validate incoming patient data. More importantly, we bypass the fragility of prompt-engineered JSON extraction by utilizing the `outlines` library. This applies deterministic finite-state machine (FSM) constraints directly to MedGemma's token generation, mathematically guaranteeing that the LLM's output conforms perfectly to our required JSON schema for downstream API consumption.
+
+**4. Enterprise Observability:**
+We integrated native Prometheus metrics (`mdt_requests_total`, `mdt_request_latency_seconds`) and Loguru structured logging, providing the exact observability metrics hospital IT departments require for deployment.

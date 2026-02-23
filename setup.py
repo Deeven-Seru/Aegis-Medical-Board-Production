@@ -18,7 +18,8 @@ setup(
         "transformers",
         "torch",
         "accelerate",
-        "bitsandbytes"
+        "bitsandbytes",
+        "outlines"
     ],
     entry_points={
         "console_scripts": [

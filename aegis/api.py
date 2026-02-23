@@ -29,9 +29,9 @@ REQUEST_COUNT = Counter("mdt_requests_total", "Total MDT analysis requests")
 LATENCY = Histogram("mdt_request_latency_seconds", "Latency of MDT analysis")
 
 # Singleton Orchestrator
-dr_house = MedicalAgent("Dr. House", "Diagnostician", "Focus on rare presentations.", "local")
-dr_chase = MedicalAgent("Dr. Chase", "Intensivist", "Focus on hemodynamics and survival.", "local")
-dr_cameron = MedicalAgent("Dr. Cameron", "Toxicologist", "Focus on immunological cascades.", "local")
+dr_house = MedicalAgent("Dr. House", "Diagnostician", "Focus on rare presentations.")
+dr_chase = MedicalAgent("Dr. Chase", "Intensivist", "Focus on hemodynamics and survival.")
+dr_cameron = MedicalAgent("Dr. Cameron", "Toxicologist", "Focus on immunological cascades.")
 cmo = ChiefMedicalOfficer([dr_house, dr_chase, dr_cameron])
 
 @app.post("/api/v2/mdt/analyze", response_model=MDTConsensus)

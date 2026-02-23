@@ -22,9 +22,9 @@ def main():
         logger.error(f"Failed to parse clinical data: {e}")
         sys.exit(1)
 
-    dr_house = MedicalAgent("Dr. House", "Diagnostician", "Focus on rare zebras.", "local")
-    dr_chase = MedicalAgent("Dr. Chase", "Intensive Care", "Focus on survival.", "local")
-    dr_cameron = MedicalAgent("Dr. Cameron", "Toxicologist", "Focus on rare tox cascades.", "local")
+    dr_house = MedicalAgent("Dr. House", "Diagnostician", "Focus on rare zebras.""local")
+    dr_chase = MedicalAgent("Dr. Chase", "Intensive Care", "Focus on survival.""local")
+    dr_cameron = MedicalAgent("Dr. Cameron", "Toxicologist", "Focus on rare tox cascades.""local")
     
     cmo = ChiefMedicalOfficer([dr_house, dr_chase, dr_cameron])
 

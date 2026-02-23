@@ -26,7 +26,7 @@ class MedicalAgent:
              for entry in history:
                   prompt += f"[{entry['role']}]: {entry['content']}\n"
                   
-        prompt += "\nProvide your clinical reasoning and confidence score."
+        prompt += "\nCritically analyze the case. If colleagues have provided assessments, you MUST identify at least one flaw, blind spot, or alternative explanation they missed before providing your own clinical reasoning and confidence score."
 
         loop = asyncio.get_event_loop()
         parsed_data = await loop.run_in_executor(None, self.engine.generate_agent_response, prompt)
