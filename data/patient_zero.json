@@ -1,20 +1,23 @@
 {
-    "patient_id": "PT-88421",
+    "patient_identifier": "PT-88421-ALPHA",
     "age": 68,
     "gender": "M",
-    "chief_complaint": "Acute abdominal pain, tachycardia, rapidly progressing ascending flaccid paralysis over 48 hours.",
-    "history_of_present_illness": "Patient presents to ER with excruciating abdominal pain unresponsive to standard analgesia. Developed distal muscle weakness yesterday which has rapidly ascended.",
+    "chief_complaint": "Acute severe abdominal pain, tachycardia, rapidly progressing ascending flaccid paralysis.",
+    "history_of_present_illness": "Patient presents to ER with excruciating abdominal pain unresponsive to standard analgesia. Developed distal muscle weakness yesterday which has rapidly ascended over 48 hours.",
+    "past_medical_history": ["Hypertension"],
+    "medications": ["Lisinopril"],
     "vitals": {
-        "BP": "165/95",
-        "HR": 118,
-        "Temp": "37.2C",
-        "SpO2": "94% on room air"
+        "blood_pressure": "165/95",
+        "heart_rate": 118,
+        "temperature_celsius": 37.2,
+        "spo2_percent": 94
     },
-    "labs": {
-        "Na": "118 mEq/L (Severe Hyponatremia)",
-        "AST_ALT": "Mildly elevated",
-        "Urine": "Darkens upon standing",
-        "CSF_Protein": "Normal",
-        "Heavy_Metals": "Negative"
-    }
+    "labs": [
+        {"test_name": "Sodium", "value": 118, "unit": "mEq/L", "flag": "L"},
+        {"test_name": "AST", "value": 145, "unit": "U/L", "flag": "H"},
+        {"test_name": "ALT", "value": 130, "unit": "U/L", "flag": "H"},
+        {"test_name": "Urine Appearance", "value": "Darkens upon standing", "unit": "N/A", "flag": "A"},
+        {"test_name": "CSF Protein", "value": 35, "unit": "mg/dL", "flag": "Normal"},
+        {"test_name": "Heavy Metals Screen", "value": "Negative", "unit": "N/A"}
+    ]
 }
