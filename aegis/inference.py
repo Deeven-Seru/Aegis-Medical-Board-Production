@@ -1,4 +1,5 @@
 import os
+import sys
 import torch
 from .logger import get_logger
 
@@ -16,11 +17,14 @@ class MedGemmaEngine:
     def __init__(self):
         self.model_id = "google/medgemma-1.5-4b-it"
         self.token = os.environ.get("HUGGING_FACE_HUB_TOKEN")
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         
+        if not self.token:
+            logger.critical("HUGGING_FACE_HUB_TOKEN environment variable is missing.")
+            raise RuntimeError("CRITICAL FAILURE: Hugging Face Token is required for native local inference. Export HUGGING_FACE_HUB_TOKEN before running.")
+            
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         logger.info(f"Initializing Native Local Inference Engine on {self.device.upper()}...")
         
-        # We wrap the import here so the rest of the app doesn't crash if dependencies are missing during basic API tests
         try:
             from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
             
@@ -48,19 +52,15 @@ class MedGemmaEngine:
                     token=self.token
                 )
                 
-            self.is_loaded = True
             logger.success("MedGemma weights successfully loaded into memory.")
         except ImportError as e:
-            logger.error(f"Failed to load ML dependencies: {e}. Running in Mock Mode for development.")
-            self.is_loaded = False
+            logger.critical(f"Missing required ML dependencies: {e}. Run: pip install transformers torch accelerate bitsandbytes")
+            sys.exit(1)
         except Exception as e:
-            logger.error(f"Failed to load model weights: {e}. Check HUGGING_FACE_HUB_TOKEN and GPU memory. Running in Mock Mode.")
-            self.is_loaded = False
+            logger.critical(f"Failed to load model weights: {e}. Ensure you have enough VRAM and a valid token.")
+            sys.exit(1)
 
-    def generate(self, prompt: str, max_new_tokens: int = 150, temperature: float = 0.2) -> str:
-        if not self.is_loaded:
-            return "MOCK_INFERENCE: Severe hyponatremia and ascending paralysis suggest Acute Intermittent Porphyria. Require urine PBG to confirm."
-
+    def generate(self, prompt: str, max_new_tokens: int = 250, temperature: float = 0.2) -> str:
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
         
         with torch.no_grad():

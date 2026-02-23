@@ -1,5 +1,7 @@
 import asyncio
 import time
+import json
+import re
 from typing import List, Dict
 from .models import AgentResponse
 from .logger import get_logger
@@ -12,8 +14,17 @@ class MedicalAgent:
         self.agent_id = agent_id
         self.specialty = specialty
         self.system_prompt = system_prompt
-        # Singleton pattern ensures the 4GB model weights are only loaded into VRAM once across all agents
         self.engine = MedGemmaEngine.get_instance()
+
+    def _extract_json(self, text: str) -> dict:
+        try:
+            match = re.search(r'\{.*\}', text.replace('\n', ' '), re.IGNORECASE)
+            if match:
+                return json.loads(match.group(0))
+            return json.loads(text)
+        except Exception as e:
+            logger.warning(f"Failed to parse structured JSON from LLM: {e}. Falling back to raw text.")
+            return {"assessment": text, "confidence": 0.5}
 
     async def analyze(self, case_text: str, history: List[Dict[str, str]]) -> AgentResponse:
         start_time = time.time()
@@ -27,19 +38,23 @@ class MedicalAgent:
              for entry in history:
                   prompt += f"[{entry['role']}]: {entry['content']}\n"
                   
-        prompt += f"\n{self.agent_id} ({self.specialty}) Assessment (Provide differential and definitive action plan):\n"
+        prompt += "\nOutput your diagnostic assessment ONLY as a valid JSON object. Do not include markdown or explanations outside the JSON. It must contain two keys: 'assessment' (string, your clinical reasoning) and 'confidence' (float between 0.0 and 1.0, your certainty).\nJSON:"
 
-        # Offload synchronous ML inference to a background thread to prevent blocking the async FastAPI event loop
         loop = asyncio.get_event_loop()
-        response_text = await loop.run_in_executor(None, self.engine.generate, prompt, 200, 0.2)
+        response_text = await loop.run_in_executor(None, self.engine.generate, prompt, 250, 0.2)
+        
+        parsed_data = self._extract_json(response_text)
+        assessment = parsed_data.get("assessment", response_text)
+        # Dynamically parsed confidence score directly from the LLM logits/reasoning
+        confidence = float(parsed_data.get("confidence", 0.70))
         
         processing_time = int((time.time() - start_time) * 1000)
-        logger.success(f"Agent {self.agent_id} completed native inference in {processing_time}ms.")
+        logger.success(f"Agent {self.agent_id} completed native inference in {processing_time}ms (Confidence: {confidence}).")
         
         return AgentResponse(
              agent_id=self.agent_id,
              specialty=self.specialty,
-             assessment=response_text,
-             confidence_score=0.94,
+             assessment=assessment,
+             confidence_score=confidence,
              processing_time_ms=processing_time
         )
