@@ -48,5 +48,6 @@ class MedicalAgent:
              specialty=self.specialty,
              assessment=assessment,
              confidence_score=confidence,
+             bias_warnings=bias_warnings,
              processing_time_ms=processing_time
         )

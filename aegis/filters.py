@@ -25,11 +25,11 @@ _INJECTION_PATTERNS: List[re.Pattern] = [
 # Terms that may indicate demographic bias leaking into clinical reasoning
 _BIAS_INDICATORS: List[re.Pattern] = [
     re.compile(
-        r"\b(race|ethnicity|religion|socioeconomic\s+status)\b.*\b(predispos\w*|inherent\w*|typical\w*|always)\b",
+        r"\b(race|ethnicity|religion|socioeconomic\s+status)\b.{0,80}\b(predispos\w*|inherent\w*|typical\w*|always)\b",
         re.IGNORECASE,
     ),
     re.compile(
-        r"\b(men|women|males?|females?)\b.*\b(always|never|cannot|unable)\b.*\b(tolerat\w*|recover\w*|present\w*)\b",
+        r"\b(men|women|males?|females?)\b.{0,80}\b(always|never|cannot|unable)\b.{0,80}\b(tolerat\w*|recover\w*|present\w*)\b",
         re.IGNORECASE,
     ),
 ]

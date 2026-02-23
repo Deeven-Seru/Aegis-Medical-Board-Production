@@ -70,6 +70,7 @@ class TestCheckOutputBias:
         text = "Due to the patient's race predisposing them to this condition"
         warnings = check_output_bias(text)
         assert len(warnings) > 0
+        assert "bias indicator" in warnings[0].lower()
 
 
 # ---------- filter_patient_case_fields ----------
