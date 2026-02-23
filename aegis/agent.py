@@ -4,6 +4,7 @@ from typing import List, Dict
 from .models import AgentResponse
 from .logger import get_logger
 from .inference import MedGemmaEngine
+from .filters import check_output_bias
 
 logger = get_logger("MedicalAgent")
 
@@ -33,7 +34,12 @@ class MedicalAgent:
         
         assessment = parsed_data.get("assessment", "Error generating assessment.")
         confidence = float(parsed_data.get("confidence", 0.0))
-        
+
+        # Check for output bias in the generated assessment
+        bias_warnings = check_output_bias(assessment)
+        if bias_warnings:
+            logger.warning(f"Agent {self.agent_id} output flagged for potential bias: {bias_warnings}")
+
         processing_time = int((time.time() - start_time) * 1000)
         logger.success(f"Agent {self.agent_id} completed native inference in {processing_time}ms (Confidence: {confidence}).")
         
